@@ -147,7 +147,7 @@ def init_gradcam(model):
 
     Args:
         model (PyTorch model): Trained PyTorch model file
-    
+
     Returns:
         gcam (GradCAM): GradCAM instance for generating Grad CAM images
     """
@@ -163,10 +163,10 @@ def init_gradcam(model):
 
 def load_image(img_path):
     """Load an image and transform into pytorch tensor with normalization
-        
+
     Args:
         img_path (str): Path of the original image
-    
+
     Returns:
         image (PyTorch tensor): Pytorch tensor of the transformed image with normalization (ImageNet stat)
         raw_image (ndarray): Numpy array of the raw input image
@@ -174,7 +174,7 @@ def load_image(img_path):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #raw_image = cv2.imread(img_path)
-    
+
     raw_image = Image.open(img_path)
     raw_image = raw_image.convert('RGB')
     loader = transforms.Compose([
@@ -194,10 +194,10 @@ def load_image(img_path):
 
 def raw_load_image(img_path):
     """Load an image and transform into pytorch tensor with normalization
-        
+
     Args:
         img_path (str): Path of the original image
-    
+
     Returns:
         image (PyTorch tensor): Pytorch tensor of the transformed image with normalization (ImageNet stat)
         raw_image (ndarray): Numpy array of the raw input image
@@ -205,7 +205,7 @@ def raw_load_image(img_path):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #raw_image = cv2.imread(img_path)
-    
+
     #change cv2 to Image library
     raw_image = Image.open(img_path)
     raw_image = raw_image.convert('RGB')
@@ -218,7 +218,7 @@ def raw_load_image(img_path):
 
 def cal_gradcam(gcam, image, target_layer):
     """Calculate the gradients and extract information at the target layer
-        
+
     Args:
         gcam (GradCAM): GradCAM instance for generating Grad CAM images
         image (PyTorch tensor): Pytorch tensor of the transformed image with normalization (ImageNet stat)
@@ -269,7 +269,7 @@ def cmap_map(function, cmap):
 
 def save_gradcam(file_path, region, raw_image, org_raw_image, prob, prediction, dir, paper_cmap=False):
     """Save the Grad CAM image
-        
+
     Args:
         file_path (str): Path that the Grad CAM image will be saved at
         region (ndarray): Grad CAM values of the input image at the target layer
@@ -285,51 +285,51 @@ def save_gradcam(file_path, region, raw_image, org_raw_image, prob, prediction, 
     light_jet = cmap_map(lambda x: x/2 + 0.5, matplotlib.cm.jet)
 
     region = region.cpu().numpy()
-    
-    cmap = light_jet(region)[..., :3] *  255.0 
+
+    cmap = light_jet(region)[..., :3] *  255.0
     #cmap = cm.jet_r(region)[..., :3] * 255.0
     if paper_cmap:
         alpha = region[..., None]
-        #region = alpha * cmap + (1 - alpha) * raw_image
-        region = alpha * cmap + (1 - alpha) * org_raw_image
+        #region = alpha * cmap + (1 - alpha) * raw_image ## if you need raw images using preprocessing
+        region = alpha * cmap + (1 - alpha) * org_raw_image ## if you need original raw images except for not preprocessing
     else:
-        #region = (cmap.astype(np.float) + raw_image.astype(np.float)) / 2
-        region = (cmap.astype(np.float) + org_raw_image.astype(np.float)) / 2
-    
-    labels = ['nonspecific', 'hyperplastic', 'ssa', 'adenoma', 'tsa', 'carcinoma']
+        #region = (cmap.astype(np.float) + raw_image.astype(np.float)) / 2 ## if you need raw images using preprocessing
+        region = (cmap.astype(np.float) + org_raw_image.astype(np.float)) / 2 ## if you need original raw images except for not preprocessing
+
+    labels = ['A', 'C']
     index = int(prediction)
     labelname = labels[index]
 
     labelprediction = dir[prediction]
-    
-    print('pred label:', labelprediction)
+
+    print('pred label: ', labelprediction)
 
     # print('pppppppppppath', file_path.split('_')[1])
 
-    file_path = file_path.split('_')[0] + "_" + labelname + "_" + file_path.split('_')[1]
+    file_path = file_path.split('_')[0] + "_" + labelname + "_" + file_path.split('_',1)[1]
 
     # Original code [:,:,::-1]
-    cv2.imwrite(file_path, np.uint8(region))
+    #cv2.imwrite(file_path, np.uint8(region))
 
-    print('kkkkkkkkkk',file_path)
+    #print('kkkkkkkkkk',file_path)
 
     #print(dir)
 
-    
-    print('pppppppppppath', file_path)
+
+    print('-------- file path: ', file_path)
 
     #prediction and probability
-    # prob = prob * 100
-    # plt.imshow(np.uint8(region)[:,:,::-1])#
-    # plt.title('{}: {:.1f}%'.format(labelname, prob))
-    # plt.axis('off')
-    # plt.tight_layout()
-    # plt.savefig(file_path,bbox_inces='tight',pad_inches=0,dpi=100)
+    prob = prob * 100
+    plt.imshow(np.uint8(region)[:,:,::-1])#
+    plt.title('{}: {:.1f}%'.format(labelname, prob))
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(file_path,bbox_inces='tight',pad_inches=0,dpi=100)
 
 
 def single_gradcam(gcam, target_layer, img_path, raw_img_path, gcam_path, dir, paper_cmap=True):
     """Make a single Grad CAM image at once. Execute load_image, cal_gradcam, and save_gradcam at once
-    
+
     Args:
         gcam (GradCAM): GradCAM instance for generating Grad CAM images
         target_layer (str): Name of the target layer of the model (Must have the same layer name in the model)
@@ -350,7 +350,7 @@ def single_gradcam(gcam, target_layer, img_path, raw_img_path, gcam_path, dir, p
 def main():
 
     model_type = "DenseNet161"
-    model_path = "./Model/DenseNet_best_state_8_720_0710.pth"
+    model_path = "./Model/DenseNet_best_state.pth"
     #target_layer = 'conv2d_7b'
 
     model = models.load(model_type)
@@ -372,10 +372,10 @@ def main():
     #IRnet: conv2d_7b, DenseNet161: features
     target_layers = ["features"]#, "layer2", "layer3", "layer4"]
 
-    img_folder = "./test/test/"
+    img_folder = "./test/"
     result_folder = "./CAM/"
 
-    labels = ['nonspecific', 'hyperplastic', 'ssa', 'adenoma', 'tsa', 'carcinoma']
+    labels = ['A','C']
 
     gcam = init_gradcam(model)
     print('check')
@@ -390,7 +390,8 @@ def main():
             for idx, img in enumerate(os.listdir(img_labelfolder)):
             #print('check: ',dir)
                 img_path = os.path.join(img_labelfolder, img)
-                raw_img_labelfolder = img_labelfolder + '/raw/'
+                #raw_img_labelfolder = img_labelfolder + '/raw/'
+                raw_img_labelfolder = '/home/mlm08/ml/data/DATA_Pheochromo_Raw_500x500/C/'
                 raw_img_path = os.path.join(raw_img_labelfolder, img)
                 print('image_path:', img_path)
                 print('raw_image_path:', raw_img_path)
@@ -399,7 +400,7 @@ def main():
                 print(img)
                 result_labelfolder = result_folder + i
                 print('res',result_labelfolder)
-                
+
                 try:
                     if not os.path.exists(result_labelfolder):
                         os.makedirs(result_labelfolder)
@@ -418,7 +419,7 @@ def main():
                     )
                     print(result_path)
                     single_gradcam(gcam, target_layer, img_path, raw_img_path, result_path, dir, paper_cmap=True)
-                
+
                 print("{} / {} Finished".format(idx, len(os.listdir(img_folder))))
 
 
