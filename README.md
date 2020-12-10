@@ -52,7 +52,7 @@ To activate map for Gradient descent weights in deep learning models
 
   - test set images to predict
   
-  - ```buildoutcfg
+  ```buildoutcfg
   ## folder structure
     +-- test
     |   +-- class1
@@ -61,7 +61,7 @@ To activate map for Gradient descent weights in deep learning models
     |           +-- img3.jpg
     |   +-- class2
     |   +-- class3
-    ```
+  ```
 
 
 
