@@ -176,8 +176,11 @@ def load_image(img_path):
     #raw_image = cv2.imread(img_path)
 
     raw_image = Image.open(img_path)
+    raw_image = raw_image.resize((224, 224))
     raw_image = raw_image.convert('RGB')
+    
     loader = transforms.Compose([
+        #transforms.Resize((224,224)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
@@ -210,6 +213,7 @@ def raw_load_image(img_path):
     raw_image = Image.open(img_path)
     raw_image = raw_image.convert('RGB')
     loader = transforms.Compose([
+        transforms.Resize((224,224)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
@@ -290,8 +294,8 @@ def save_gradcam(file_path, region, raw_image, org_raw_image, prob, prediction, 
     #cmap = cm.jet_r(region)[..., :3] * 255.0
     if paper_cmap:
         alpha = region[..., None]
-        #region = alpha * cmap + (1 - alpha) * raw_image ## if you need raw images using preprocessing
-        region = alpha * cmap + (1 - alpha) * org_raw_image ## if you need original raw images except for not preprocessing
+        region = alpha * cmap + (1 - alpha) * raw_image ## if you need raw images using preprocessing
+        #region = alpha * cmap + (1 - alpha) * org_raw_image ## if you need original raw images except for not preprocessing
     else:
         #region = (cmap.astype(np.float) + raw_image.astype(np.float)) / 2 ## if you need raw images using preprocessing
         region = (cmap.astype(np.float) + org_raw_image.astype(np.float)) / 2 ## if you need original raw images except for not preprocessing
@@ -360,10 +364,10 @@ def single_gradcam(gcam, target_layer, img_path, raw_img_path, gcam_path, dir, l
 
 def main():
 
-    model_type = "IRnet" #Resnet101, IRnet, Efficientnet, NASNetALarge, DenseNet161, DenseNet169
-    model_path = "./Model/eyelid_bin_888_1125_InceptionResNetV2_best_state.pth"
+    model_type = "DenseNet161" #Resnet101, IRnet, Efficientnet, NASNetALarge, DenseNet161, DenseNet169
+    model_path = "/home/huray/workspace/classifier-pytorch/models/food_bin_7/DenseNet_best_state_for_300epoch.pth"
     #target_layer = 'conv2d_7b'
-    labels = ['Malignancy','Benign']
+    labels = ['food','nonfood']
 
     model = models.load(model_type, num_classes=len(labels))
     model.load_state_dict(torch.load(model_path, map_location="cuda:0"))
@@ -381,10 +385,10 @@ def main():
     ########## Case 2: Multiple files in a directory ##########
 
     import os
-    #IRnet: conv2d_7b, DenseNet161: features
-    target_layers = ["conv2d_7b"]#, "layer2", "layer3", "layer4"]
+    #IRnet: conv2d_7b, DenseNet161: features, EfficientNet: _bn1
+    target_layers = ["features"]#, "layer2", "layer3", "layer4"]
 
-    img_folder = "./eyelid_bin_1125_test/test/"
+    img_folder = "/home/huray/workspace/data/number_7/"
     result_folder = "./CAM/"
 
     #labels = ['CIN','Non-Neoplasm']
@@ -403,7 +407,7 @@ def main():
             #print('check: ',dir)
                 img_path = os.path.join(img_labelfolder, img)
                 #raw_img_labelfolder = img_labelfolder + '/raw/'
-                raw_img_labelfolder = '/home/mlm08/ml/data/grp_split/EYELID_3cls_900x600_org_total_20201123'
+                raw_img_labelfolder = '/home/huray/workspace/data/ext_number_7/0'
                 raw_img_path = os.path.join(raw_img_labelfolder, img)
                 print('image_path:', img_path)
                 print('raw_image_path:', raw_img_path)
